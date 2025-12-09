@@ -3,12 +3,14 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { Place } from './place.model';
 import { HttpClient } from '@angular/common/http';
 import { map, catchError, throwError, tap } from 'rxjs';
+import { ErrorService } from '../shared/error.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PlacesService {
   private userPlaces = signal<Place[]>([]);
+  private errorService = inject(ErrorService);
 
   loadedUserPlaces = this.userPlaces.asReadonly();
   private httpClient = inject(HttpClient);
@@ -43,7 +45,7 @@ export class PlacesService {
   addPlaceToUserPlaces(place: Place) {
     const prevPlaces = this.userPlaces();
     // prevent adding duplicate places
-    if (prevPlaces.some((p) => p.id === place.id)) {
+    if (!prevPlaces.some((p) => p.id === place.id)) {
       this.userPlaces.set([...prevPlaces, place]);
     }
 
@@ -55,6 +57,7 @@ export class PlacesService {
         catchError((error) => {
           // optimistic updating
           this.userPlaces.set(prevPlaces);
+          this.errorService.showError('Failed to store selected place.');
           return throwError(() => new Error('Failed to store selected place.'));
         })
       );
