@@ -63,5 +63,30 @@ export class PlacesService {
       );
   }
 
-  removeUserPlace(place: Place) {}
+  removeUserPlace(place: Place) {
+    // could do this instead of the tap method I used
+    const prevPlaces = this.userPlaces();
+    // if (prevPlaces.some((p) => p.id === place.id)) {
+    //   this.userPlaces.set(prevPlaces.filter(p=>p.id !== place.id))
+    // }
+    return this.httpClient
+      .delete<{ userPlaces: Place[] }>(
+        'http://localhost:3000/user-places/' + place.id
+      )
+      .pipe(
+        tap({
+          next: (data) => {
+            this.userPlaces.set(data.userPlaces);
+          },
+        }),
+        catchError((error) => {
+          // optimistic updating
+          this.userPlaces.set(prevPlaces); // if an error occurs, reset the user places;
+          this.errorService.showError('Failed to delete the selected place.');
+          return throwError(
+            () => new Error('Failed to delete the selected place.')
+          );
+        })
+      );
+  }
 }

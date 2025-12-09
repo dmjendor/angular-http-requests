@@ -36,13 +36,12 @@ export class UserPlacesComponent {
     });
   }
 
-  onSelectPlace(selectedPlace: Place) {
-    // this.httpClient
-    //   .put('http://localhost:3000/user-places', {
-    //     placeId: selectedPlace.id,
-    //   })
-    //   .subscribe({
-    //     next: (response) => console.log(response),
-    //   });
+  onRemovePlace(selectedPlace: Place) {
+    const subscription = this.placesService
+      .removeUserPlace(selectedPlace)
+      .subscribe();
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
   }
 }
